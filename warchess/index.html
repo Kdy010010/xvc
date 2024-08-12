@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>19x19 전쟁게임</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(19, 30px);
+            grid-template-rows: repeat(19, 30px);
+            gap: 1px;
+            margin-top: 20px;
+        }
+        .cell {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f0f0f0;
+            cursor: pointer;
+        }
+        .cell.commander {
+            background-color: red;
+            color: white;
+        }
+        .cell.cannon {
+            background-color: blue;
+            color: white;
+        }
+        .cell.gunner {
+            background-color: green;
+            color: white;
+        }
+        .info {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>War CHESS</h1>
+    <div id="gameBoard" class="grid"></div>
+    <div class="info" id="info"></div>
+
+    <script>
+        const gameBoard = document.getElementById('gameBoard');
+        const info = document.getElementById('info');
+
+        // 게임판 생성
+        const gridSize = 19;
+        const grid = [];
+
+        for (let y = 0; y < gridSize; y++) {
+            for (let x = 0; x < gridSize; x++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.dataset.x = x;
+                cell.dataset.y = y;
+                gameBoard.appendChild(cell);
+                grid.push(cell);
+            }
+        }
+
+        // 유닛 데이터 초기화
+        const units = [
+            { id: 'commander1', type: 'commander', x: 0, y: 0, health: 100, range: 1, attack: 20 },
+            { id: 'cannon1', type: 'cannon', x: 2, y: 2, health: 80, range: 5, attack: 30 },
+            { id: 'gunner1', type: 'gunner', x: 3, y: 3, health: 60, range: 3, attack: 10 },
+            { id: 'commander2', type: 'commander', x: 18, y: 18, health: 100, range: 1, attack: 20 },
+            { id: 'cannon2', type: 'cannon', x: 16, y: 16, health: 80, range: 5, attack: 30 },
+            { id: 'gunner2', type: 'gunner', x: 15, y: 15, health: 60, range: 3, attack: 10 }
+        ];
+
+        // 유닛 배치
+        units.forEach(unit => {
+            const cell = grid.find(c => c.dataset.x == unit.x && c.dataset.y == unit.y);
+            if (cell) {
+                cell.classList.add(unit.type);
+                cell.textContent = unit.type.charAt(0).toUpperCase();
+                cell.dataset.unitId = unit.id;
+            }
+        });
+
+        // 클릭 이벤트 핸들러
+        let selectedUnit = null;
+
+        gameBoard.addEventListener('click', (event) => {
+            const cell = event.target;
+            const x = parseInt(cell.dataset.x);
+            const y = parseInt(cell.dataset.y);
+            const unitId = cell.dataset.unitId;
+
+            if (selectedUnit) {
+                // 유닛 이동
+                if (!unitId && Math.abs(selectedUnit.x - x) <= 1 && Math.abs(selectedUnit.y - y) <= 1) {
+                    // 이동 가능한 범위 확인
+                    const targetCell = grid.find(c => c.dataset.x == x && c.dataset.y == y);
+                    if (targetCell) {
+                        const oldCell = grid.find(c => c.dataset.unitId == selectedUnit.id);
+                        oldCell.classList.remove(selectedUnit.type);
+                        oldCell.textContent = '';
+                        oldCell.removeAttribute('data-unit-id');
+
+                        targetCell.classList.add(selectedUnit.type);
+                        targetCell.textContent = selectedUnit.type.charAt(0).toUpperCase();
+                        targetCell.dataset.unitId = selectedUnit.id;
+
+                        selectedUnit.x = x;
+                        selectedUnit.y = y;
+                    }
+                    selectedUnit = null;
+                    info.textContent = '';
+                }
+            } else if (unitId) {
+                // 유닛 선택
+                selectedUnit = units.find(u => u.id === unitId);
+                if (selectedUnit) {
+                    info.textContent = `${selectedUnit.type.toUpperCase()} 선택됨 - 위치 (${selectedUnit.x}, ${selectedUnit.y})`;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
